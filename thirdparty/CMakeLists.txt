@@ -31,8 +31,11 @@ FetchContent_Declare(
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
     GIT_TAG 3.4.0
     EXCLUDE_FROM_ALL
+    SOURCE_SUBDIR cmake             # Hack: causing not to generate eigen, supplying cmake as dummy path
 )
-FetchContent_MakeAvailable(eigen)
+FetchContent_MakeAvailable(eigen)   # Won't generate eigne
+add_library(eigen INTERFACE)        # Instead, make an interface to eigen
+target_include_directories(eigen INTERFACE ${eigen_SOURCE_DIR})
 
 # ===============================
 # Fetch dlib
@@ -127,28 +130,29 @@ set(BUILD_WITH_STATIC_CRT       OFF CACHE INTERNAL "")
 # --------------------------------------------------------------
 # 3rdparty dependencies / additional features
 # --------------------------------------------------------------
-set(BUILD_ZLIB          ON  CACHE INTERNAL "")   # Zlib is widely used
+set(BUILD_ZLIB          ON  CACHE INTERNAL "")    # Zlib is widely used
 set(WITH_CUDA           OFF CACHE INTERNAL "")
 set(WITH_VFW            ON  CACHE INTERNAL "")    # Video for Windows
 
 # Windows-specific camera/video options
 if (WIN32)
-    set(WITH_DSHOW     ON  CACHE INTERNAL "")     # DirectShow for UVC cameras
-    set(WITH_WIN32UI   ON  CACHE INTERNAL "")
+set(WITH_DSHOW     ON  CACHE INTERNAL "")     # DirectShow for UVC cameras
+set(WITH_WIN32UI   ON  CACHE INTERNAL "")
 else()
-    set(WITH_DSHOW     OFF CACHE INTERNAL "")
-    set(WITH_WIN32UI   OFF CACHE INTERNAL "")
+set(WITH_DSHOW     OFF CACHE INTERNAL "")
+set(WITH_WIN32UI   OFF CACHE INTERNAL "")
 endif()
 
 # macOS-specific toggles
 if (APPLE)
-    # Often we rely on macOS native image codecs
-    set(WITH_JPEG     OFF CACHE INTERNAL "")
+# Often we rely on macOS native image codecs
+set(WITH_JPEG     OFF CACHE INTERNAL "")
 else()
-    set(WITH_JPEG     ON  CACHE INTERNAL "")
+set(WITH_JPEG     ON  CACHE INTERNAL "")
 endif()
 
 # Other optional 3rdparty libs
+set(WITH_OBSENSOR      OFF CACHE INTERNAL "")
 set(WITH_GSTREAMER     OFF CACHE INTERNAL "")
 set(WITH_WEBP          OFF CACHE INTERNAL "")
 set(WITH_VTK           OFF CACHE INTERNAL "")
@@ -162,7 +166,9 @@ set(WITH_LAPACK        OFF CACHE INTERNAL "")
 set(WITH_JASPER        OFF CACHE INTERNAL "")
 set(WITH_IPP           OFF CACHE INTERNAL "")
 set(WITH_FFMPEG        ON  CACHE INTERNAL "")
+IF (WIN32)
 set(WITH_MSMF          ON  CACHE INTERNAL "")
+endif()
 set(WITH_DIRECTX       OFF CACHE INTERNAL "")
 set(WITH_CUFFT         OFF CACHE INTERNAL "")
 set(WITH_1394          OFF CACHE INTERNAL "")
@@ -188,17 +194,23 @@ target_include_directories(opencv_world INTERFACE
     $<BUILD_INTERFACE:${OpenCV_BINARY_DIR}/modules/world>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> # OpenCV generates a opencv_modules.hpp file in the output dir
 )
-set_target_properties(jpeg12-static PROPERTIES FOLDER "Thirdparty")
-set_target_properties(jpeg16-static PROPERTIES FOLDER "Thirdparty")
-set_target_properties(libjpeg-turbo PROPERTIES FOLDER "Thirdparty")
 set_target_properties(ade PROPERTIES FOLDER "Thirdparty")
 set_target_properties(libopenjp2 PROPERTIES FOLDER "Thirdparty")
 set_target_properties(zlib PROPERTIES FOLDER "Thirdparty")
+IF (WIN32)
+set_target_properties(jpeg12-static PROPERTIES FOLDER "Thirdparty")
+set_target_properties(jpeg16-static PROPERTIES FOLDER "Thirdparty")
+set_target_properties(libjpeg-turbo PROPERTIES FOLDER "Thirdparty")
 set_target_properties(opencv_world_AVX PROPERTIES FOLDER "Thirdparty")
 set_target_properties(opencv_world_AVX2 PROPERTIES FOLDER "Thirdparty")
 set_target_properties(opencv_world_AVX512_SKX PROPERTIES FOLDER "Thirdparty")
 set_target_properties(opencv_world_SSE4_1 PROPERTIES FOLDER "Thirdparty")
 set_target_properties(opencv_world_SSE4_2 PROPERTIES FOLDER "Thirdparty")
+elseif (APPLE)
+set_target_properties(carotene PROPERTIES FOLDER "Thirdparty")
+set_target_properties(carotene_objs PROPERTIES FOLDER "Thirdparty")
+set_target_properties(tegra_hal PROPERTIES FOLDER "Thirdparty")
+endif()
 set_target_properties(opencv_world PROPERTIES FOLDER "Thirdparty")
 set_target_properties(opencv_modules PROPERTIES FOLDER "Thirdparty")
 set_target_properties(gen_opencv_js_source PROPERTIES FOLDER "Thirdparty")

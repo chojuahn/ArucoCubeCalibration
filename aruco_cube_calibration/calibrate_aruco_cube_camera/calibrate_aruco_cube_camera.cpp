@@ -1,16 +1,3 @@
-/***********************************************************
- * Example: ArucoCubeCalibratorWithDlib.cpp
- *
- * Requires:
- *   - dlib
- *   - OpenCV
- *   - Proper linkage to both
- *
- * Conventions:
- *   - Function names: lowerCamelCase (e.g. someFunctionName)
- *   - Variable names: lower_snake_case (e.g. some_variable_name)
- ***********************************************************/
-
 #include <iostream>
 #include <fstream>
 #include <limits>

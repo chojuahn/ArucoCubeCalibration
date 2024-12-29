@@ -17,13 +17,13 @@ include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     cxxopts
     nlohmann_json::nlohmann_json
-    Eigen3::Eigen
+    eigen
     dlib
     opencv_world
 )
 if(APPLE)
 find_package(TBB REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE TBB::tbb)
+target_link_libraries(${PROJECT_NAME} TBB::tbb)
 endif()
 
 # Set properties

@@ -13,7 +13,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # MSVC Multi-threading set
-if(MSVC)
+if (MSVC)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 endif()

@@ -1,6 +1,10 @@
 #include "GeometryUtils.hpp"
 
+#ifdef __APPLE__
+#include <tbb/parallel_for.h>
+#else
 #include <execution>
+#endif
 
 #include <Eigen/Dense>
 #include <opencv2/imgproc.hpp>   // for cv::kmeans in some OpenCV versions
