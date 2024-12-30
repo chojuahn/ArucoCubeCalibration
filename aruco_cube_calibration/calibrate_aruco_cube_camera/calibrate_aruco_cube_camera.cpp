@@ -387,6 +387,8 @@ int main(int argc, char** argv) try {
     // Parse all the samples available from image stream
     Util::ArucoCubeParser aruco_cube_parser(replay_path, 3, marker_length, marker_res);
     auto [camera_matrix, distortion_coefs, markers_image_ided_framed_all, frame_numbers_all] = aruco_cube_parser.processFrames(camera_matrix_opt, distortion_coefs_opt);
+    if (frame_numbers_all.empty())
+        throw std::runtime_error("No ArUco marker detected");
     // Get Unbiased samples
     auto [markers_image_id_pair_framed, frame_numbers] = getUnbiasedIdedMarkers(markers_image_ided_framed_all, frame_numbers_all, static_cast<size_t>(n_samples));
     const double corners_count = std::accumulate(markers_image_id_pair_framed.begin(), markers_image_id_pair_framed.end(), 0.0,

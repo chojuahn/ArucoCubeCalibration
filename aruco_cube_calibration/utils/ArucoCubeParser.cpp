@@ -12,6 +12,18 @@
 #include "GeometryUtils.hpp"
 
 
+namespace
+{
+bool exitDisplayBgr(const cv::Mat& bgr)
+{
+    cv::imshow("ArucoCubeParser", bgr);
+    const auto key = cv::waitKey(1);
+    if (key == 27 || key == static_cast<int>('q'))
+        return true;
+    return false;
+}
+}
+
 namespace Util
 {
 ArucoCubeParser::ArucoCubeParser(const std::filesystem::path& replay_video_path, const size_t min_valid_n_markers, const double marker_length, const std::string& marker_res)
@@ -109,6 +121,7 @@ ArucoCubeParser::processFrames(const std::optional<Eigen::Matrix3d>& camera_matr
         // Check if there is anything detected
         if (ids_cv.empty()) {
             ++frame_idx;
+            if (exitDisplayBgr(bgr)) break;
             continue;
         }
 
@@ -124,6 +137,7 @@ ArucoCubeParser::processFrames(const std::optional<Eigen::Matrix3d>& camera_matr
         // Check if bgr is blurry
         if (isBlurry(gray, markers_image) || ids.size() < m_min_valid_n_markers) {
             ++frame_idx;
+            if (exitDisplayBgr(bgr)) break;
             continue;
         }
 
@@ -138,19 +152,19 @@ ArucoCubeParser::processFrames(const std::optional<Eigen::Matrix3d>& camera_matr
         m_bgrs[frame_idx] = bgr.clone();
         ++frame_idx;
 
-        //// Draw
-        //ids_cv = ids;
-        //markers_image_cv.clear();
-        //for (Eigen::Index i = 0; i < markers_image.size(); ++i) {
-        //    auto& marker_cv = markers_image_cv.emplace_back(std::vector<cv::Point2f>{});
-        //    for (Eigen::Index j = 0; j < markers_image[i].rows(); ++j)
-        //        marker_cv.push_back({ static_cast<float>(markers_image[i](j, 0)), static_cast<float>(markers_image[i](j, 1)) });
-        //}
-        //if (!ids.empty()) {
-        //    cv::aruco::drawDetectedMarkers(bgr, markers_image_cv, ids_cv);
-        //}
-        //cv::imshow("ArucoCubeParser", bgr);
-        //if(cv::waitKey(1) == 27) break;
+        // Draw
+        if (!ids.empty()) {
+            ids_cv = ids;
+            markers_image_cv.clear();
+            for (Eigen::Index i = 0; i < markers_image.size(); ++i) {
+                auto& marker_cv = markers_image_cv.emplace_back(std::vector<cv::Point2f>{});
+                for (Eigen::Index j = 0; j < markers_image[i].rows(); ++j)
+                    marker_cv.push_back({ static_cast<float>(markers_image[i](j, 0)), static_cast<float>(markers_image[i](j, 1)) });
+            }
+            cv::aruco::drawDetectedMarkers(bgr, markers_image_cv, ids_cv);
+        }
+
+        if (exitDisplayBgr(bgr)) break;
     }
 
     return std::make_tuple(camera_matrix, distortion_coefs, m_markers_image_ided_framed, m_frame_numbers);

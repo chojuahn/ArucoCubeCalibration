@@ -1,12 +1,16 @@
 # ArUco Cube Camera Calibration
 
-A toolkit for ArUco cube calibration with/without calibrated camera. ArUco cube calibration is a process of optimizing local coordinates of the cube's ArUco corners, given the camera intrinsics and poses. If not, it will also calibrate the camera intrinsics.
+A toolkit for ArUco cube calibration with/without a calibrated camera that accommodates imperfect cube dimensions. This means the cube doesn't need to be exactly the intended size, nor do its surfaces need to be perfectly flat.
 
-The algorithm is similar to traditional bundle adjustment, which optimizes camera intrinsics/extrinsics and 3D coordinates of local features, although this one is with known features on each face of the cube (ArUco markers).
+It is a process of optimizing local coordinates of the cube's ArUco corners, with optional camera intrinsics calibration if not provided.
 
-Optimization is done using dlib's L-BFGS-B optimizer, which can be replaced with more advanced optimizers, e.g. Ceres-solver.
+The algorithm is similar to conventional bundle adjustment, which simultaneously optimizes camera intrinsics/extrinsics and 3D coordinates of local features.
 
-The calibrated ArUco cube can be used as a reference coordinate system for camera pose estimation from all 6 faces of the cube, which is useful for tasks like 3D reconstruction, multi-frame scene registration, etc.
+Unlike traditional methods that use random feature detection and matching, this approach uses known features (ArUco markers) on each face of the cube to eliminate ambiguities.
+
+The optimization uses dlib's L-BFGS-B optimizer, which can be replaced with more advanced optimizers like Ceres-solver.
+
+The calibrated ArUco cube serves as a reference coordinate system for camera pose estimation using all 6 faces of the cube. This is useful for tasks like 3D reconstruction and multi-frame scene localization in controlled environments.
 
 ## Build Instructions
 
@@ -18,13 +22,15 @@ The calibrated ArUco cube can be used as a reference coordinate system for camer
   - 5x5 resolution of ArUco markers with ids 0 to 5 (configurable via --marker-res)
   - Making ArUco cube doesn't require any special tools, like 3D printer, just a few sheets of ArUco markers and boards to form the cube.
   - Rough size of the cube and the exact ArUco marker length are required to perform the calibration.
-  - Current implementation of markers placement is hardcoded such as
+  - Current implementation of initial markers placement is hardcoded such as
     - +z: id 0,
     - -y: id 1,
     - +x: id 2,
     - -z: id 3,
     - -x: id 4,
     - +y: id 5
+  - as well as initial marker orientation can be found in `getInitialCornersInCube()` function to be modified if needed.
+  - Note: Incorrect marker placement compared to initial marker coordinates will lead to longer time for solution to converge, and it can be stuck in local minima.
 
 ### Building
 
@@ -62,7 +68,7 @@ Options:
   --marker-length FLOAT  Length of ArUco marker in meters
   --marker-res STRING    Marker resolution (default: "5x5")
   --cam-json STRING      Path to initial camera intrinsics JSON file (optional)
-  --replay STRING        Path to video replay folder (optional)
+  --replay STRING        Path to replay video file (optional)
   -h, --help            Print usage information
 ```
 
@@ -72,12 +78,11 @@ Options:
 ./calibrate_aruco_cube_camera --nsamples 100 --marker-length 0.04 --marker-res 5x5
 ```
 
-#### Output
+#### What it does
 
-The application:
-1. Processes camera stream to detect ArUco markers
+1. Processes camera stream to detect ArUco markers (press 'q' or `ESC` to exit)
 2. Optimizes local coordinates of cube corners and camera intrinsics/extrinsics (extrinsics per frame)
-3. Saves calibration results to a JSON file
+3. Saves calibration results to a JSON file in std::filesystem::current_path()
 ```
 camera_matrix: 3x3 array
 distortion_coefs: 1x5 array
