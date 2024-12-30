@@ -78,18 +78,20 @@ The application:
 1. Processes camera stream to detect ArUco markers
 2. Optimizes local coordinates of cube corners and camera intrinsics/extrinsics (extrinsics per frame)
 3. Saves calibration results to a JSON file
+```
+camera_matrix: 3x3 array
+distortion_coefs: 1x5 array
+markers_in_cube: 6x4x2 array
+```
 4. Generates a visualization video showing initial vs optimized corner projections
-  - Red diamonds: Detected corners used for pose estimation
-  - Yellow crosses: Initial projected corners
-  - Green crosses: Optimized projected corners
-  - Green lines: Marker boundaries
-  - Coordinate axes: Estimated cube pose
 
-The output includes:
-- Camera matrix (intrinsics)
-- Distortion coefficients
-- Optimized cube corner positions
-- Visualization video showing the calibration results
+https://github.com/user-attachments/assets/d3f0a6fa-4347-4755-aa18-21f190fc3202
+
+- Red diamonds: Detected 2D corners used for pose estimation (only one marker being used for testing)
+- Yellow crosses: Initial guess of local corners
+- Green crosses: Optimized local corners
+- Green lines: Marker boundaries
+- Coordinate axes: Estimated cube pose
 
 ## File Structure
 
