@@ -15,7 +15,7 @@ namespace Util
 class ArucoCubeParser
 {
 public:
-    ArucoCubeParser(const std::filesystem::path& replay_video_path, const size_t min_valid_n_markers, const double marker_length);
+    ArucoCubeParser(const std::filesystem::path& replay_video_path, const size_t min_valid_n_markers, const double marker_length, const std::string& marker_res);
 
     ~ArucoCubeParser();
 

@@ -15,7 +15,7 @@ The calibrated ArUco cube can be used as a reference coordinate system for camer
 - CMake (3.10 or higher)
 - ffmpeg
 - ArUco cube with 6 faces of ArUco markers
-  - 5x5 resolution of ArUco markers with ids 0 to 5
+  - 5x5 resolution of ArUco markers with ids 0 to 5 (configurable via --marker-res)
   - Making ArUco cube doesn't require any special tools, like 3D printer, just a few sheets of ArUco markers and boards to form the cube.
   - Rough size of the cube and the exact ArUco marker length are required to perform the calibration.
   - Current implementation of markers placement is hardcoded such as
@@ -25,7 +25,6 @@ The calibrated ArUco cube can be used as a reference coordinate system for camer
     - -z: id 3,
     - -x: id 4,
     - +y: id 5
-  - Note: This can be changed in the code, or arg parser can be extended to read initial local cube corners from the user
 
 ### Building
 
@@ -61,6 +60,7 @@ The result is a JSON file containing the optimized camera intrinsics and cube co
 Options:
   --nsamples INT         Number of samples to use for calibration
   --marker-length FLOAT  Length of ArUco marker in meters
+  --marker-res STRING    Marker resolution (default: "5x5")
   --cam-json STRING      Path to initial camera intrinsics JSON file (optional)
   --replay STRING        Path to video replay folder (optional)
   -h, --help            Print usage information
@@ -69,16 +69,21 @@ Options:
 #### Example Usage
 
 ```bash
-./calibrate_aruco_cube_camera --nsamples 100 --marker-length 0.04
+./calibrate_aruco_cube_camera --nsamples 100 --marker-length 0.04 --marker-res 5x5
 ```
 
 #### Output
 
 The application:
 1. Processes camera stream to detect ArUco markers
-2. Optimizes cube corner positions and camera intrinsics
+2. Optimizes local coordinates of cube corners and camera intrinsics/extrinsics (extrinsics per frame)
 3. Saves calibration results to a JSON file
 4. Generates a visualization video showing initial vs optimized corner projections
+  - Red diamonds: Detected corners used for pose estimation
+  - Yellow crosses: Initial projected corners
+  - Green crosses: Optimized projected corners
+  - Green lines: Marker boundaries
+  - Coordinate axes: Estimated cube pose
 
 The output includes:
 - Camera matrix (intrinsics)

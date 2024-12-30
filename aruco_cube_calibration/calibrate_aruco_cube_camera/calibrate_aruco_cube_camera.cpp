@@ -358,6 +358,7 @@ int main(int argc, char** argv) try {
     options.add_options()
         ("nsamples", "Number of samples", cxxopts::value<int>())
         ("marker-length", "Marker length", cxxopts::value<double>())
+        ("marker-res", "Marker Resolution", cxxopts::value<std::string>()->default_value("5x5"))
         ("cam-json", "Camera intrinsics json", cxxopts::value<std::string>()->default_value(""))
         ("replay", "Video replay folder", cxxopts::value<std::string>()->default_value(""))
         ("h,help", "Print usage");
@@ -366,13 +367,14 @@ int main(int argc, char** argv) try {
         std::cout << options.help() << std::endl;
         return 0;
     }
-    if (!parse_result.count("nsamples") || !parse_result.count("marker-length")) {
+    if (!parse_result.count("nsamples") || !parse_result.count("marker-length") || !parse_result.count("marker-res")) {
         std::cerr << "Missing required arguments\n" << options.help() << std::endl;
         return -1;
     }
 
     const auto n_samples = parse_result["nsamples"].as<int>();
     const auto marker_length = parse_result["marker-length"].as<double>();
+    const auto marker_res = parse_result["marker-res"].as<std::string>();
     const auto replay_path = parse_result["replay"].as<std::string>();
     std::cout << "[INFO] n_samples = " << n_samples << ", marker_length = " << marker_length << std::endl;
     if (n_samples <= 0 || marker_length <= 0.0) {
@@ -383,7 +385,7 @@ int main(int argc, char** argv) try {
     // Parse calibration json if supplied
     auto [corners_cube_6x4x3_opt, camera_matrix_opt, distortion_coefs_opt] = Util::readArucoCubeJson(parse_result["cam-json"].as<std::string>());
     // Parse all the samples available from image stream
-    Util::ArucoCubeParser aruco_cube_parser(replay_path, 3, marker_length);
+    Util::ArucoCubeParser aruco_cube_parser(replay_path, 3, marker_length, marker_res);
     auto [camera_matrix, distortion_coefs, markers_image_ided_framed_all, frame_numbers_all] = aruco_cube_parser.processFrames(camera_matrix_opt, distortion_coefs_opt);
     // Get Unbiased samples
     auto [markers_image_id_pair_framed, frame_numbers] = getUnbiasedIdedMarkers(markers_image_ided_framed_all, frame_numbers_all, static_cast<size_t>(n_samples));
@@ -424,8 +426,10 @@ int main(int argc, char** argv) try {
     corners_cube_6x4x3_prime = Util::alignCornersToOrthogonalFrame(corners_cube_6x4x3_prime);
 
     // Write JSON
-    const auto replay_dir = std::filesystem::path(replay_path).parent_path();
-    Util::writeArucoCubeJson(replay_dir, corners_cube_6x4x3_prime, camera_matrix_prime, distortion_coefs_prime);
+    const auto store_dir = std::filesystem::exists(replay_path)
+        ? std::filesystem::path(replay_path).parent_path()
+        : std::filesystem::current_path();  // Use current executable directory if replay_path is empty
+    Util::writeArucoCubeJson(store_dir, corners_cube_6x4x3_prime, camera_matrix_prime, distortion_coefs_prime);
 
     markers_image_id_pair_framed = getMarkerIdPairsFramed(markers_image_ided_framed_all);
     frame_numbers = frame_numbers_all;
@@ -442,7 +446,7 @@ int main(int argc, char** argv) try {
     cube_to_camera_rtvecs_nx6_prime = estimateCubePoses(markers_image_id_pair_framed_reduced, corners_cube_6x4x3_prime, camera_matrix_prime, distortion_coefs_prime);
 
     // Save a video example
-    const std::string out_video_path = (replay_dir / "initial_to_result.avi").string();
+    const std::string out_video_path = (store_dir / "initial_to_result.avi").string();
     cv::VideoWriter writer;
     writer.open(out_video_path, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 30, image_size, true);
     if(!writer.isOpened()) {
@@ -459,7 +463,7 @@ int main(int argc, char** argv) try {
         for(const auto& marker_image_id_pair_reduced : markers_image_id_pair_framed_reduced[idx]) {
             const auto& marker_image = marker_image_id_pair_reduced.first;
             for(Eigen::Index r = 0; r < marker_image.rows(); ++r)
-                cv::drawMarker(bgr, cv::Point2f{ static_cast<float>(marker_image(r, 0)), static_cast<float>(marker_image(r, 1)) }, cv::Scalar(0, 0, 255), cv::MARKER_DIAMOND, 20, 1);
+                cv::drawMarker(bgr, cv::Point2f{ static_cast<float>(marker_image(r, 0)), static_cast<float>(marker_image(r, 1)) }, cv::Scalar(0, 0, 255), cv::MARKER_DIAMOND, 20, 2);
         }
 
         // Collect face ids

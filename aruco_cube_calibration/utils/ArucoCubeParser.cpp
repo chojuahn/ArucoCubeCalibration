@@ -14,7 +14,7 @@
 
 namespace Util
 {
-ArucoCubeParser::ArucoCubeParser(const std::filesystem::path& replay_video_path, const size_t min_valid_n_markers, const double marker_length)
+ArucoCubeParser::ArucoCubeParser(const std::filesystem::path& replay_video_path, const size_t min_valid_n_markers, const double marker_length, const std::string& marker_res)
     : m_min_valid_n_markers(min_valid_n_markers), m_marker_length(marker_length)
 {
     // Initialize capture from either a video file or camera
@@ -39,7 +39,19 @@ ArucoCubeParser::ArucoCubeParser(const std::filesystem::path& replay_video_path,
     m_image_size.height = m_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
 
     // Initialize ArUco Detector
-    const auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_50);
+    cv::aruco::PredefinedDictionaryType dict_type{};
+    if (marker_res == "4x4")
+        dict_type = cv::aruco::DICT_4X4_50;
+    else if (marker_res == "5x5")
+        dict_type = cv::aruco::DICT_5X5_50;
+    else if (marker_res == "6x6")
+        dict_type = cv::aruco::DICT_6X6_50;
+    else if (marker_res == "7x7")
+        dict_type = cv::aruco::DICT_7X7_50;
+    else
+        throw std::runtime_error("Unknown marker_res type: " + marker_res);
+
+    const auto dictionary = cv::aruco::getPredefinedDictionary(dict_type);
     auto detector_params = cv::aruco::DetectorParameters();
     detector_params.cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
     m_detector = cv::aruco::ArucoDetector(dictionary, detector_params);
